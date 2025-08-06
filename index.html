@@ -5,89 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colector de Datos de Lote</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 15px;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            box-sizing: border-box;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-        .btn {
-            background-color: #007BFF;
-            color: white;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 18px;
-            margin-top: 10px;
-            font-weight: bold;
-            transition: background-color 0.2s;
-        }
-        .btn:hover:not(:disabled) { background-color: #0056b3; }
-        .btn:disabled { background-color: #a0cffa; cursor: not-allowed; }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; }
+        .container { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 0 auto; }
+        h1, h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
+        .btn { background-color: #007BFF; color: white; padding: 14px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; margin-top: 10px; font-weight: bold; }
         .btn-secondary { background-color: #6c757d; }
-        .btn-secondary:hover:not(:disabled) { background-color: #5a6268; }
         .btn-success { background-color: #28a745; }
-        .btn-success:hover:not(:disabled) { background-color: #1e7e34; }
         .btn-warning { background-color: #ffc107; color: #212529; }
-        .btn-warning:hover:not(:disabled) { background-color: #e0a800; }
-        
-        /* Contenedor del escáner */
         #scanner-section { border: 2px dashed #ccc; padding: 10px; border-radius: 8px; }
         #qr-reader { width: 100%; }
-
-        /* Sección para el lote actual */
-        #current-lot-section {
-            background-color: #e9f5ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border: 1px solid #b3d7ff;
-        }
-        #current-lot-section h2 { font-size: 1.2em; }
-        #json-output {
-            background-color: #272822; color: #f8f8f2; padding: 15px; border-radius: 8px;
-            white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace;
-            max-height: 200px; overflow-y: auto;
-        }
-
-        #video-container, #photo-container { text-align: center; margin: 15px 0; }
-        #video, #photo { max-width: 100%; border-radius: 4px; }
-        
-        /* Contenedor de la tabla con scroll horizontal */
-        #table-wrapper {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-        table {
-            width: 100%;
-            min-width: 600px; /* Evita que las columnas se aplasten demasiado */
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th { background-color: #f2f2f2; position: sticky; top: 0; }
+        #current-lot-section { background-color: #e9f5ff; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #b3d7ff; }
+        #json-output { background-color: #272822; color: #f8f8f2; padding: 15px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
+        #table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; min-width: 600px; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
         .hidden { display: none; }
     </style>
 </head>
@@ -95,36 +27,22 @@
     <div class="container">
         <h1>Colector de Datos de Lote</h1>
 
-        <!-- Botón principal para iniciar el ciclo -->
         <button id="start-scan-btn" class="btn">Escanear Nuevo Lote</button>
 
-        <!-- Sección del escáner que se muestra al presionar el botón -->
         <div id="scanner-section" class="hidden">
             <div id="qr-reader"></div>
-            <button id="cancel-scan-btn" class="btn btn-secondary" style="margin-top: 10px;">Cancelar</button>
+            <button id="cancel-scan-btn" class="btn btn-secondary">Cancelar</button>
         </div>
 
-        <!-- Sección para los datos del lote recién escaneado -->
         <div id="current-lot-section" class="hidden">
-            <h2>Datos del Lote Actual</h2>
+            <h2>Datos del Lote Escaneado</h2>
             <pre><code id="json-output"></code></pre>
-            <div id="camera-section">
-                <video id="video" autoplay playsinline class="hidden"></video>
-                <canvas id="canvas" class="hidden"></canvas>
-                <button id="start-camera-btn" class="btn btn-secondary">Tomar Foto</button>
-                <button id="take-photo-btn" class="btn hidden">Capturar Foto</button>
-                <div id="photo-container">
-                    <img id="photo" class="hidden" alt="Foto capturada">
-                </div>
-            </div>
-            <button id="add-to-table-btn" class="btn" disabled>Añadir a la Lista</button>
+            <button id="add-to-table-btn" class="btn">Confirmar y Añadir a la Lista</button>
         </div>
         
-        <!-- Sección de la tabla de datos recopilados (siempre visible) -->
         <div id="collected-data-section" class="hidden">
             <hr style="margin: 25px 0;">
             <h2>Lotes Recopilados</h2>
-            <p style="text-align:center; color:#555;">(Desliza la tabla hacia los lados para ver todos los datos)</p>
             <div id="table-wrapper">
                 <table id="data-table">
                     <thead><tr></tr></thead>
@@ -137,25 +55,20 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+    <!-- NUEVA LIBRERÍA para descompresión -->
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+
     <script>
-        // Variables de estado
         let currentLotData = null;
-        let currentPhotoUrl = null;
         let collectedData = [];
         let tableHeaders = [];
         let qrScanner = null;
 
-        // Elementos del DOM
         const startScanBtn = document.getElementById('start-scan-btn');
         const scannerSection = document.getElementById('scanner-section');
         const cancelScanBtn = document.getElementById('cancel-scan-btn');
         const currentLotSection = document.getElementById('current-lot-section');
         const jsonOutput = document.getElementById('json-output');
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const photo = document.getElementById('photo');
-        const startCameraBtn = document.getElementById('start-camera-btn');
-        const takePhotoBtn = document.getElementById('take-photo-btn');
         const addToTableBtn = document.getElementById('add-to-table-btn');
         const collectedDataSection = document.getElementById('collected-data-section');
         const dataTableHeader = document.querySelector('#data-table thead tr');
@@ -163,30 +76,21 @@
         const downloadCsvBtn = document.getElementById('download-csv-btn');
         const emailCsvBtn = document.getElementById('email-csv-btn');
 
-        // --- FLUJO PRINCIPAL Y MANEJO DE ESTADOS ---
-
         startScanBtn.addEventListener('click', () => {
             startScanBtn.classList.add('hidden');
             scannerSection.classList.remove('hidden');
             qrScanner = new Html5Qrcode("qr-reader");
-            qrScanner.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                onScanSuccess,
-                onScanFailure
-            );
+            qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: {width: 250, height: 250} }, onScanSuccess, () => {});
         });
 
-        cancelScanBtn.addEventListener('click', () => {
-            stopScanner();
-        });
+        cancelScanBtn.addEventListener('click', () => stopScanner());
 
         function stopScanner() {
             if (qrScanner && qrScanner.isScanning) {
-                qrScanner.stop().then(() => {
+                qrScanner.stop().finally(() => {
                     scannerSection.classList.add('hidden');
                     startScanBtn.classList.remove('hidden');
-                }).catch(err => console.error("Error al detener el escáner.", err));
+                });
             } else {
                 scannerSection.classList.add('hidden');
                 startScanBtn.classList.remove('hidden');
@@ -196,53 +100,28 @@
         function onScanSuccess(decodedText, decodedResult) {
             stopScanner();
             try {
-                currentLotData = JSON.parse(decodedText);
+                // --- CAMBIO CLAVE: DESCOMPRESIÓN ---
+                // 1. Decodificar el texto Base64 a datos comprimidos
+                const compressedData = atob(decodedText);
+
+                // 2. Descomprimir los datos usando pako para obtener el JSON original
+                const jsonString = pako.inflate(compressedData, { to: 'string' });
+
+                // 3. Parsear el JSON como antes
+                currentLotData = JSON.parse(jsonString);
+
                 jsonOutput.textContent = JSON.stringify(currentLotData, null, 2);
                 currentLotSection.classList.remove('hidden');
-                checkIfReadyToAdd();
+
             } catch (e) {
-                alert("Error: El código QR no contiene datos en formato JSON válido.");
-                startScanBtn.classList.remove('hidden'); // Permitir reintentar
+                console.error("Error al procesar el QR:", e);
+                alert("Error: El código QR es inválido o está corrupto. Intente de nuevo.");
+                startScanBtn.classList.remove('hidden');
             }
-        }
-
-        function onScanFailure(error) { /* No hacer nada, sigue escaneando */ }
-
-        // --- MANEJO DE CÁMARA Y FOTO ---
-
-        startCameraBtn.addEventListener('click', async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                video.classList.remove('hidden');
-                startCameraBtn.classList.add('hidden');
-                takePhotoBtn.classList.remove('hidden');
-            } catch (err) {
-                alert("No se pudo acceder a la cámara. Revisa los permisos.");
-            }
-        });
-
-        takePhotoBtn.addEventListener('click', () => {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            currentPhotoUrl = canvas.toDataURL('image/jpeg', 0.8);
-            photo.src = currentPhotoUrl;
-            photo.classList.remove('hidden');
-            video.srcObject.getTracks().forEach(track => track.stop());
-            video.classList.add('hidden');
-            takePhotoBtn.classList.add('hidden');
-            checkIfReadyToAdd();
-        });
-
-        // --- MANEJO DE LA TABLA ---
-
-        function checkIfReadyToAdd() {
-            addToTableBtn.disabled = !(currentLotData && currentPhotoUrl);
         }
 
         addToTableBtn.addEventListener('click', () => {
-            const newRowData = { ...currentLotData, 'Fotografia': `(Imagen capturada)` };
+            const newRowData = { ...currentLotData };
 
             if (collectedData.length === 0) {
                 tableHeaders = Object.keys(newRowData);
@@ -250,62 +129,19 @@
                 collectedDataSection.classList.remove('hidden');
             }
             collectedData.push(newRowData);
-
             const newRow = document.createElement('tr');
             newRow.innerHTML = tableHeaders.map(header => `<td>${newRowData[header] || ''}</td>`).join('');
             dataTableBody.appendChild(newRow);
 
-            resetCurrentLotSection();
-        });
-
-        function resetCurrentLotSection() {
-            // Limpia la sección del lote actual
             currentLotSection.classList.add('hidden');
             currentLotData = null;
-            currentPhotoUrl = null;
-            photo.classList.add('hidden');
-            startCameraBtn.classList.remove('hidden');
-            addToTableBtn.disabled = true;
-
-            // Deja el botón principal listo para el siguiente escaneo
             startScanBtn.classList.remove('hidden');
-        }
-
-        // --- EXPORTACIÓN DE DATOS ---
-
-        function generateCsvString() {
-            if (collectedData.length === 0) return null;
-            const csvRows = [tableHeaders.join(',')];
-            for (const row of collectedData) {
-                const values = tableHeaders.map(header => {
-                    const escaped = ('' + (row[header] || '')).replace(/"/g, '""');
-                    return `"${escaped}"`;
-                });
-                csvRows.push(values.join(','));
-            }
-            return csvRows.join('\n');
-        }
-
-        downloadCsvBtn.addEventListener('click', () => {
-            const csvString = generateCsvString();
-            if (!csvString) { alert("No hay datos para descargar."); return; }
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'datos_lotes.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
         });
-        
-        emailCsvBtn.addEventListener('click', () => {
-            const csvString = generateCsvString();
-            if (!csvString) { alert("No hay datos para enviar."); return; }
-            const subject = "Reporte de Lotes Recopilados";
-            const body = `Datos de los lotes escaneados adjuntos en formato CSV:\n\n${csvString}`;
-            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        });
+
+        // Funciones de exportación (sin cambios)
+        function generateCsvString() { if (collectedData.length === 0) return null; const csvRows = [tableHeaders.join(',')]; for (const row of collectedData) { const values = tableHeaders.map(header => `"${(''+(row[header]||'')).replace(/"/g,'""')}"`); csvRows.push(values.join(',')); } return csvRows.join('\n'); }
+        downloadCsvBtn.addEventListener('click', () => { const s = generateCsvString(); if(!s){alert("No hay datos.");return;} const b = new Blob([s],{type:'text/csv;charset=utf-8;'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href=u; a.download='datos_lotes.csv'; a.click(); });
+        emailCsvBtn.addEventListener('click', () => { const s = generateCsvString(); if(!s){alert("No hay datos.");return;} window.location.href=`mailto:?subject=Reporte de Lotes Recopilados&body=${encodeURIComponent(s)}`; });
     </script>
 </body>
 </html>
