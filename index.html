@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+<!-- El head y el style son los mismos que en la versión anterior -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +17,7 @@
         .btn-success:hover { background-color: #1e7e34; }
         .btn-warning { background-color: #ffc107; color: #212529; }
         .btn-warning:hover { background-color: #e0a800; }
-        #qr-reader { width: 100%; max-width: 500px; margin: 0 auto; border: 1px solid #ccc; }
+        #qr-reader { width: 100%; max-width: 500px; margin: 10px auto; border: 1px solid #ccc; }
         #video-container, #photo-container { text-align: center; margin: 15px 0; }
         #video, #photo { max-width: 100%; border-radius: 4px; }
         #json-display-container pre { background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
@@ -27,20 +28,17 @@
     </style>
 </head>
 <body>
-
+    <!-- El HTML del body es el mismo -->
     <div class="container">
         <h1>Capturador de Datos y Fotos</h1>
-
         <div id="scanner-container">
             <div id="qr-reader"></div>
         </div>
-        
         <div id="data-content" class="hidden">
             <div id="json-display-container">
                 <h2>Datos del Producto Escaneado</h2>
                 <pre><code id="json-output"></code></pre>
             </div>
-
             <div id="camera-section">
                 <h2>Tomar Fotografía</h2>
                 <div id="video-container">
@@ -54,10 +52,8 @@
                 </div>
             </div>
             <hr>
-
             <button id="add-to-table" class="btn" disabled>Añadir Datos y Foto a la Tabla</button>
             <hr>
-
             <div id="table-section" class="hidden">
                 <h2>Datos Recopilados</h2>
                 <div style="overflow-x:auto;">
@@ -74,14 +70,14 @@
 
     <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
     <script>
-        // Variables globales
+        // El script es el mismo, pero con una línea modificada.
+
         let jsonData = null;
         let photoDataUrl = null;
         let tableData = [];
         let headers = [];
         let html5QrcodeScanner;
 
-        // Referencias a elementos del DOM
         const scannerContainer = document.getElementById('scanner-container');
         const dataContent = document.getElementById('data-content');
         const jsonOutput = document.getElementById('json-output');
@@ -97,7 +93,6 @@
         const dataTableBody = document.querySelector('#data-table tbody');
         const dataTableHeader = document.querySelector('#data-table thead tr');
 
-        // ---- LÓGICA DEL ESCÁNER QR ----
         function onScanSuccess(decodedText, decodedResult) {
             try {
                 jsonData = JSON.parse(decodedText);
@@ -114,120 +109,26 @@
         function onScanFailure(error) { /* No hacer nada */ }
 
         document.addEventListener('DOMContentLoaded', () => {
-            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", 
+                // --- INICIO DE LA CORRECCIÓN ---
+                // Aumentamos el tamaño del cuadro de escaneo (qrbox) a 300px
+                { fps: 10, qrbox: { width: 300, height: 300 } },
+                // --- FIN DE LA CORRECCIÓN --- 
+                false
+            );
             html5QrcodeScanner.render(onScanSuccess, onScanFailure);
         });
 
-        // ---- LÓGICA DE LA CÁMARA DE FOTOS ----
-        startCameraButton.addEventListener('click', async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                video.style.display = 'block';
-                startCameraButton.classList.add('hidden');
-                takePhotoButton.classList.remove('hidden');
-            } catch (err) {
-                alert("No se pudo acceder a la cámara. Asegúrate de dar los permisos necesarios.");
-            }
-        });
-
-        takePhotoButton.addEventListener('click', () => {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            photoDataUrl = canvas.toDataURL('image/jpeg', 0.8); // Comprime un poco la imagen
-            photo.src = photoDataUrl;
-            photo.classList.remove('hidden');
-            video.srcObject.getTracks().forEach(track => track.stop());
-            video.style.display = 'none';
-            takePhotoButton.classList.add('hidden');
-            checkEnableAddButton();
-        });
-
-        function checkEnableAddButton() {
-            addToTableButton.disabled = !(jsonData && photoDataUrl);
-        }
-
-        // ---- LÓGICA DE LA TABLA DE DATOS ----
-        addToTableButton.addEventListener('click', () => {
-            if (!jsonData) return;
-            const newRowData = { ...jsonData, 'Fotografia': `(Imagen no incluida en CSV/Email)` };
-
-            if (tableData.length === 0) {
-                headers = Object.keys(newRowData);
-                dataTableHeader.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-                tableSection.classList.remove('hidden');
-            }
-
-            tableData.push(newRowData);
-
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = headers.map(header => `<td>${newRowData[header] || ''}</td>`).join('');
-            dataTableBody.appendChild(newRow);
-
-            // Reiniciar para la siguiente captura
-            resetForNextScan();
-            alert("¡Datos agregados a la tabla! Escanee el siguiente código QR.");
-        });
-
-        function resetForNextScan() {
-            jsonData = null;
-            photoDataUrl = null;
-            
-            dataContent.classList.add('hidden');
-            scannerContainer.classList.remove('hidden');
-            if(html5QrcodeScanner) html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-
-            photo.classList.add('hidden');
-            photo.src = '';
-            addToTableButton.disabled = true;
-            startCameraButton.classList.remove('hidden');
-        }
-
-        // ---- LÓGICA DE EXPORTACIÓN (CSV Y EMAIL) ----
-        function generateCsvString() {
-            if (tableData.length === 0) {
-                alert("No hay datos en la tabla para exportar.");
-                return null;
-            }
-            const csvRows = [];
-            csvRows.push(headers.join(','));
-            for (const row of tableData) {
-                const values = headers.map(header => {
-                    const escaped = ('' + (row[header] || '')).replace(/"/g, '""');
-                    return `"${escaped}"`;
-                });
-                csvRows.push(values.join(','));
-            }
-            return csvRows.join('\n');
-        }
-
-        downloadCsvButton.addEventListener('click', () => {
-            const csvString = generateCsvString();
-            if (!csvString) return;
-
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'datos_productos.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
-        
-        // --- NUEVA FUNCIÓN DE EMAIL ---
-        emailCsvButton.addEventListener('click', () => {
-            const csvString = generateCsvString();
-            if (!csvString) return;
-
-            const subject = "Datos de Productos Recopilados";
-            // Usamos encodeURIComponent para asegurar que los saltos de línea y caracteres especiales funcionen en el email
-            const body = encodeURIComponent(csvString);
-
-            // Creamos y abrimos el enlace mailto:
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
-        });
+        // El resto del script (cámara, tabla, email) no necesita cambios.
+        startCameraButton.addEventListener('click', async () => { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); video.srcObject = stream; video.style.display = 'block'; startCameraButton.classList.add('hidden'); takePhotoButton.classList.remove('hidden'); } catch (err) { alert("No se pudo acceder a la cámara. Asegúrate de dar los permisos necesarios."); } });
+        takePhotoButton.addEventListener('click', () => { canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height); photoDataUrl = canvas.toDataURL('image/jpeg', 0.8); photo.src = photoDataUrl; photo.classList.remove('hidden'); video.srcObject.getTracks().forEach(track => track.stop()); video.style.display = 'none'; takePhotoButton.classList.add('hidden'); checkEnableAddButton(); });
+        function checkEnableAddButton() { addToTableButton.disabled = !(jsonData && photoDataUrl); }
+        addToTableButton.addEventListener('click', () => { if (!jsonData) return; const newRowData = { ...jsonData, 'Fotografia': `(Imagen no incluida en CSV/Email)` }; if (tableData.length === 0) { headers = Object.keys(newRowData); dataTableHeader.innerHTML = headers.map(h => `<th>${h}</th>`).join(''); tableSection.classList.remove('hidden'); } tableData.push(newRowData); const newRow = document.createElement('tr'); newRow.innerHTML = headers.map(header => `<td>${newRowData[header] || ''}</td>`).join(''); dataTableBody.appendChild(newRow); resetForNextScan(); alert("¡Datos agregados a la tabla! Escanee el siguiente código QR."); });
+        function resetForNextScan() { jsonData = null; photoDataUrl = null; dataContent.classList.add('hidden'); scannerContainer.classList.remove('hidden'); if(html5QrcodeScanner) html5QrcodeScanner.render(onScanSuccess, onScanFailure); photo.classList.add('hidden'); photo.src = ''; addToTableButton.disabled = true; startCameraButton.classList.remove('hidden'); }
+        function generateCsvString() { if (tableData.length === 0) { alert("No hay datos en la tabla para exportar."); return null; } const csvRows = []; csvRows.push(headers.join(',')); for (const row of tableData) { const values = headers.map(header => { const escaped = ('' + (row[header] || '')).replace(/"/g, '""'); return `"${escaped}"`; }); csvRows.push(values.join(',')); } return csvRows.join('\n'); }
+        downloadCsvButton.addEventListener('click', () => { const csvString = generateCsvString(); if (!csvString) return; const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.setAttribute('href', url); a.setAttribute('download', 'datos_productos.csv'); document.body.appendChild(a); a.click(); document.body.removeChild(a); });
+        emailCsvButton.addEventListener('click', () => { const csvString = generateCsvString(); if (!csvString) return; const subject = "Datos de Productos Recopilados"; const body = encodeURIComponent(csvString); window.location.href = `mailto:?subject=${subject}&body=${body}`; });
     </script>
 </body>
 </html>
