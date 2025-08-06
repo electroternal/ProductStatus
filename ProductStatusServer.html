@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capturador de Datos y Fotos</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+        #video-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 4px;
+        }
+        #photo-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+        #photo {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+        #json-display-container pre {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Capturador de Datos y Fotos</h1>
+
+        <!-- Sección de Datos del Producto -->
+        <div id="json-display-container">
+            <h2>Datos del Producto (desde QR)</h2>
+            <pre><code id="json-output">Cargando datos desde la URL...</code></pre>
+        </div>
+
+        <!-- Sección de Cámara -->
+        <div id="camera-section">
+            <h2>Tomar Fotografía</h2>
+            <div id="video-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+            </div>
+            <button id="start-camera" class="btn btn-secondary">Activar Cámara</button>
+            <button id="take-photo" class="btn hidden">Tomar Foto</button>
+            <div id="photo-container">
+                <img id="photo" class="hidden" alt="Foto capturada">
+            </div>
+        </div>
+        <hr>
+
+        <!-- Botón para agregar a la tabla -->
+        <button id="add-to-table" class="btn" disabled>Añadir a la Tabla</button>
+        <hr>
+
+        <!-- Sección de la Tabla de Datos -->
+        <div id="table-section">
+            <h2>Datos Recopilados</h2>
+            <div style="overflow-x:auto;">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <!-- Los encabezados se generarán dinámicamente -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas de datos se agregarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="download-csv" class="btn btn-success" style="margin-top: 20px;">Descargar CSV</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let jsonData = null;
+        let photoDataUrl = null;
+        let tableData = [];
+        let headers = [];
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const photo = document.getElementById('photo');
+        const startCameraButton = document.getElementById('start-camera');
+        const takePhotoButton = document.getElementById('take-photo');
+        const addToTableButton = document.getElementById('add-to-table');
+        const downloadCsvButton = document.getElementById('download-csv');
+        const jsonOutput = document.getElementById('json-output');
+        const dataTableBody = document.querySelector('#data-table tbody');
+        const dataTableHeader = document.querySelector('#data-table thead tr');
+
+        // Lógica al cargar la página
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.toString() !== "") {
+                const data = {};
+                for (const [key, value] of params.entries()) {
+                    data[key] = decodeURIComponent(value);
+                }
+                jsonData = data;
+                jsonOutput.textContent = JSON.stringify(jsonData, null, 2);
+                checkEnableAddButton();
+            } else {
+                jsonOutput.textContent = "No se encontraron datos en la URL. Escanea un código QR generado por la otra aplicación.";
+            }
+        };
+
+        // Iniciar la cámara
+        startCameraButton.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                startCameraButton.classList.add('hidden');
+                takePhotoButton.classList.remove('hidden');
+            } catch (err) {
+                console.error("Error al acceder a la cámara: ", err);
+                alert("No se pudo acceder a la cámara. Asegúrate de dar los permisos necesarios.");
+            }
+        });
+
+        // Tomar una foto
+        takePhotoButton.addEventListener('click', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            photoDataUrl = canvas.toDataURL('image/jpeg');
+            photo.src = photoDataUrl;
+            photo.classList.remove('hidden');
+
+            // Detener la cámara
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.style.display = 'none';
+            takePhotoButton.classList.add('hidden');
+
+            checkEnableAddButton();
+        });
+
+        // Habilitar el botón de "Añadir a la Tabla" si hay datos y foto
+        function checkEnableAddButton() {
+            if (jsonData && photoDataUrl) {
+                addToTableButton.disabled = false;
+            }
+        }
+
+        // Añadir los datos a la tabla
+        addToTableButton.addEventListener('click', () => {
+            if (!jsonData || !photoDataUrl) {
+                alert("Faltan los datos del producto o la fotografía.");
+                return;
+            }
+
+            const newRowData = { ...jsonData, 'Fotografia': 'Foto_' + (tableData.length + 1) + '.jpg' };
+
+            // Si es la primera fila, crear los encabezados
+            if (tableData.length === 0) {
+                headers = Object.keys(newRowData);
+                dataTableHeader.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+            }
+
+            tableData.push(newRowData);
+
+            // Añadir la fila a la tabla HTML
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = headers.map(header => `<td>${newRowData[header] || ''}</td>`).join('');
+            dataTableBody.appendChild(newRow);
+
+            // Reiniciar para la siguiente captura
+            photo.classList.add('hidden');
+            photoDataUrl = null;
+            addToTableButton.disabled = true;
+            startCameraButton.classList.remove('hidden');
+            alert("¡Datos agregados a la tabla!");
+        });
+
+        // Descargar la tabla como CSV
+        downloadCsvButton.addEventListener('click', () => {
+            if (tableData.length === 0) {
+                alert("No hay datos en la tabla para descargar.");
+                return;
+            }
+
+            const csvRows = [];
+            // Encabezados
+            csvRows.push(headers.join(','));
+
+            // Filas
+            for (const row of tableData) {
+                const values = headers.map(header => {
+                    const escaped = ('' + (row[header] || '')).replace(/"/g, '""');
+                    return `"${escaped}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+
+            const csvString = csvRows.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'datos_productos.csv');
+            a.style.visibility = 'hidden';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+    </script>
+</body>
+</html>
