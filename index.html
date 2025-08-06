@@ -1,108 +1,262 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colector de Datos de Lote</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; }
-        .container { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 0 auto; }
-        h1, h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
-        .btn { background-color: #007BFF; color: white; padding: 14px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 18px; margin-top: 10px; font-weight: bold; }
-        .btn-secondary { background-color: #6c757d; }
-        .btn-success { background-color: #28a745; }
-        .btn-warning { background-color: #ffc107; color: #212529; }
-        #scanner-section { border: 2px dashed #ccc; padding: 10px; border-radius: 8px; }
-        #qr-reader { width: 100%; }
-        #current-lot-section { background-color: #e9f5ff; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #b3d7ff; }
-        #json-output { background-color: #272822; color: #f8f8f2; padding: 15px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
-        #table-wrapper { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; min-width: 600px; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .hidden { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Colector de Datos de Lote</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --bg: #f4f6f8;
+    --card-bg: #fff;
+    --text: #333;
+    --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    --border: 1px solid #e0e0e0;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); }
+.container { max-width:800px; margin:30px auto; padding:20px; }
+
+.card { background:var(--card-bg); padding:20px; border-radius:8px; box-shadow:var(--shadow); margin-bottom:20px; }
+.card h2 { margin-bottom:15px; font-size:1.4rem; }
+
+.btn {
+    padding:12px 18px;
+    border:none;
+    border-radius:6px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .2s ease;
+}
+.btn-primary   { background:var(--primary); color:#fff; }
+.btn-secondary { background:var(--secondary); color:#fff; }
+.btn-success   { background:var(--success); color:#fff; }
+.btn-warning   { background:var(--warning); color:#212529; }
+.btn-danger    { background:var(--danger); color:#fff; }
+
+.btn:hover { filter:brightness(1.1); }
+.btn:active { transform:scale(.97); }
+
+.btn-delete { background:var(--danger); color:#fff; border-radius:4px; padding:4px 8px; font-size:0.9rem; }
+
+#scanner-section, #current-lot-section, #collected-data-section { display:none; }
+#scanner-section.active, #current-lot-section.active, #collected-data-section.active { display:block; }
+
+#qr-reader { width:100%; }
+
+#json-output {
+    background:#272822; color:#f8f8f2;
+    padding:15px; border-radius:6px;
+    white-space:pre-wrap; word-wrap:break-word;
+    font-family:'Courier New',Courier,monospace;
+    max-height:300px; overflow:auto;
+}
+
+.table-wrapper { overflow-x:auto; }
+table {
+    width:100%; border-collapse:collapse;
+}
+th, td {
+    padding:10px 12px;
+    border:var(--border);
+    text-align:left;
+}
+thead th { background:#f2f2f2; }
+tbody tr:nth-child(even) { background:#fafafa; }
+tbody tr:hover { background:#f0f8ff; }
+</style>
 </head>
 <body>
-    <div class="container">
+
+<div class="container">
+    <div class="card">
         <h1>Colector de Datos de Lote</h1>
-        <button id="start-scan-btn" class="btn">Escanear Nuevo Lote</button>
-        <div id="scanner-section" class="hidden">
-            <div id="qr-reader"></div>
-            <button id="cancel-scan-btn" class="btn btn-secondary">Cancelar</button>
+        <button id="start-scan-btn" class="btn btn-primary">Escanear Nuevo Lote</button>
+    </div>
+
+    <!-- Scan Section -->
+    <div id="scanner-section" class="card">
+        <div id="qr-reader"></div>
+        <button id="cancel-scan-btn" class="btn btn-secondary">Cancelar</button>
+    </div>
+
+    <!-- Current Lot Section -->
+    <div id="current-lot-section" class="card">
+        <h2>Datos del Lote Escaneado</h2>
+        <pre id="json-output"></pre>
+        <button id="add-to-table-btn" class="btn btn-success">Confirmar y Añadir a la Lista</button>
+    </div>
+
+    <!-- Collected Data Section -->
+    <div id="collected-data-section" class="card">
+        <h2>Lotes Recopilados</h2>
+        <div class="table-wrapper">
+            <table id="data-table">
+                <thead><tr></tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
-        <div id="current-lot-section" class="hidden">
-            <h2>Datos del Lote Escaneado</h2>
-            <pre><code id="json-output"></code></pre>
-            <button id="add-to-table-btn" class="btn">Confirmar y Añadir a la Lista</button>
-        </div>
-        <div id="collected-data-section" class="hidden">
-            <hr style="margin: 25px 0;">
-            <h2>Lotes Recopilados</h2>
-            <div id="table-wrapper"><table id="data-table"><thead><tr></tr></thead><tbody></tbody></table></div>
+        <div style="margin-top:15px;">
             <button id="download-csv-btn" class="btn btn-success">Descargar como CSV</button>
             <button id="email-csv-btn" class="btn btn-warning">Enviar por Email</button>
         </div>
     </div>
+</div>
 
-    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 
-    <script>
-        let currentLotData = null, collectedData = [], tableHeaders = [], qrScanner = null;
-        const startScanBtn = document.getElementById('start-scan-btn'), scannerSection = document.getElementById('scanner-section'), cancelScanBtn = document.getElementById('cancel-scan-btn'), currentLotSection = document.getElementById('current-lot-section'), jsonOutput = document.getElementById('json-output'), addToTableBtn = document.getElementById('add-to-table-btn'), collectedDataSection = document.getElementById('collected-data-section'), dataTableHeader = document.querySelector('#data-table thead tr'), dataTableBody = document.querySelector('#data-table tbody'), downloadCsvBtn = document.getElementById('download-csv-btn'), emailCsvBtn = document.getElementById('email-csv-btn');
-        startScanBtn.addEventListener('click', () => { startScanBtn.classList.add('hidden'); scannerSection.classList.remove('hidden'); qrScanner = new Html5Qrcode("qr-reader"); qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: {width: 250, height: 250} }, onScanSuccess, () => {}); });
-        cancelScanBtn.addEventListener('click', () => stopScanner());
-        function stopScanner() { if (qrScanner && qrScanner.isScanning) { qrScanner.stop().finally(() => { scannerSection.classList.add('hidden'); startScanBtn.classList.remove('hidden'); }); } else { scannerSection.classList.add('hidden'); startScanBtn.classList.remove('hidden'); } }
-        
-        function onScanSuccess(decodedText, decodedResult) {
-            stopScanner();
-            try {
-                // --- INICIO DE LA CORRECCIÓN ---
-                // 1. Decodificar el texto Base64 a una cadena de texto "cruda"
-                const binaryString = atob(decodedText);
+<script>
+let currentLotData = null, collectedData = [], tableHeaders = [], qrScanner = null;
+const startScanBtn = document.getElementById('start-scan-btn'),
+      scannerSection = document.getElementById('scanner-section'),
+      cancelScanBtn = document.getElementById('cancel-scan-btn'),
+      currentLotSection = document.getElementById('current-lot-section'),
+      jsonOutput = document.getElementById('json-output'),
+      addToTableBtn = document.getElementById('add-to-table-btn'),
+      collectedDataSection = document.getElementById('collected-data-section'),
+      dataTableHeader = document.querySelector('#data-table thead tr'),
+      dataTableBody = document.querySelector('#data-table tbody'),
+      downloadCsvBtn = document.getElementById('download-csv-btn'),
+      emailCsvBtn = document.getElementById('email-csv-btn');
 
-                // 2. Convertir la cadena cruda de vuelta a un array de bytes (Uint8Array)
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+// ---------- Scanning ----------
+startScanBtn.addEventListener('click', () => {
+    startScanBtn.classList.add('hidden');
+    scannerSection.classList.add('active');
+    qrScanner = new Html5Qrcode("qr-reader");
+    qrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: {width: 250, height: 250} },
+        onScanSuccess,
+        () => {}
+    );
+});
 
-                // 3. Descomprimir el array de bytes para obtener el JSON original.
-                const jsonString = pako.inflate(bytes, { to: 'string' });
-                // --- FIN DE LA CORRECCIÓN ---
-
-                currentLotData = JSON.parse(jsonString);
-                jsonOutput.textContent = JSON.stringify(currentLotData, null, 2);
-                currentLotSection.classList.remove('hidden');
-
-            } catch (e) {
-                console.error("Error al procesar el QR:", e);
-                alert("Error: El código QR es inválido o está corrupto. Intente de nuevo.");
-                startScanBtn.classList.remove('hidden');
-            }
-        }
-
-        addToTableBtn.addEventListener('click', () => {
-            const newRowData = { ...currentLotData };
-            if (collectedData.length === 0) {
-                tableHeaders = Object.keys(newRowData);
-                dataTableHeader.innerHTML = tableHeaders.map(h => `<th>${h}</th>`).join('');
-                collectedDataSection.classList.remove('hidden');
-            }
-            collectedData.push(newRowData);
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = tableHeaders.map(header => `<td>${newRowData[header] || ''}</td>`).join('');
-            dataTableBody.appendChild(newRow);
-            currentLotSection.classList.add('hidden');
-            currentLotData = null;
+cancelScanBtn.addEventListener('click', () => stopScanner());
+function stopScanner() {
+    if (qrScanner && qrScanner.isScanning) {
+        qrScanner.stop().finally(() => {
+            scannerSection.classList.remove('active');
             startScanBtn.classList.remove('hidden');
         });
-        
-        function generateCsvString() { if (collectedData.length === 0) return null; const csvRows = [tableHeaders.join(',')]; for (const row of collectedData) { const values = tableHeaders.map(header => `"${(''+(row[header]||'')).replace(/"/g,'""')}"`); csvRows.push(values.join(',')); } return csvRows.join('\n'); }
-        downloadCsvBtn.addEventListener('click', () => { const s = generateCsvString(); if(!s){alert("No hay datos.");return;} const b = new Blob([s],{type:'text/csv;charset=utf-8;'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href=u; a.download='datos_lotes.csv'; a.click(); });
-        emailCsvBtn.addEventListener('click', () => { const s = generateCsvString(); if(!s){alert("No hay datos.");return;} window.location.href=`mailto:?subject=Reporte de Lotes Recopilados&body=${encodeURIComponent(s)}`; });
-    </script>
+    } else {
+        scannerSection.classList.remove('active');
+        startScanBtn.classList.remove('hidden');
+    }
+}
+
+function onScanSuccess(decodedText) {
+    stopScanner();
+    try {
+        // 1. Base64 -> binary string
+        const binaryString = atob(decodedText);
+
+        // 2. Binary string -> Uint8Array
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // 3. Decompress
+        const jsonString = pako.inflate(bytes, { to: 'string' });
+
+        currentLotData = JSON.parse(jsonString);
+        jsonOutput.textContent = JSON.stringify(currentLotData, null, 2);
+        currentLotSection.classList.add('active');
+    } catch (e) {
+        console.error("Error al procesar el QR:", e);
+        alert("Error: El código QR es inválido o está corrupto. Intente de nuevo.");
+        startScanBtn.classList.remove('hidden');
+    }
+}
+
+// ---------- Add to Table ----------
+addToTableBtn.addEventListener('click', () => {
+    const newRowData = { ...currentLotData };
+
+    if (collectedData.length === 0) {
+        tableHeaders = Object.keys(newRowData);
+        dataTableHeader.innerHTML = tableHeaders.map(h => `<th>${h}</th>`).join('');
+        collectedDataSection.classList.add('active');
+    }
+
+    collectedData.push(newRowData);
+    renderTableRow(collectedData.length - 1, newRowData);
+
+    currentLotSection.classList.remove('active');
+    currentLotData = null;
+    startScanBtn.classList.remove('hidden');
+});
+
+function renderTableRow(index, rowData) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = tableHeaders
+        .map(h => `<td>${rowData[h] !== undefined ? rowData[h] : ''}</td>`)
+        .join('') + `<td><button class="btn btn-delete" data-index="${index}" title="Eliminar">&#x2715;</button></td>`;
+    tr.dataset.idx = index;
+    dataTableBody.appendChild(tr);
+}
+
+// ---------- Delete Row ----------
+dataTableBody.addEventListener('click', e => {
+    if (e.target.classList.contains('btn-delete')) {
+        const idx = Number(e.target.dataset.index);
+        if (!isNaN(idx)) {
+            // Remove from array
+            collectedData.splice(idx, 1);
+            // Re‑render entire table (simpler than manipulating indexes)
+            dataTableBody.innerHTML = '';
+            collectedData.forEach((row, i) => renderTableRow(i, row));
+        }
+    }
+});
+
+// ---------- CSV Operations ----------
+function generateCsvString() {
+    if (collectedData.length === 0) return null;
+    const csvRows = [tableHeaders.join(',')];
+    for (const row of collectedData) {
+        const values = tableHeaders.map(header =>
+            `"${('' + (row[header] ?? '')).replace(/"/g, '""')}"`
+        );
+        csvRows.push(values.join(','));
+    }
+    return csvRows.join('\n');
+}
+
+downloadCsvBtn.addEventListener('click', () => {
+    const s = generateCsvString();
+    if (!s) {
+        alert("No hay datos.");
+        return;
+    }
+    const b = new Blob([s], { type: 'text/csv;charset=utf-8;' });
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = 'datos_lotes.csv';
+    a.click();
+});
+
+emailCsvBtn.addEventListener('click', () => {
+    const s = generateCsvString();
+    if (!s) {
+        alert("No hay datos.");
+        return;
+    }
+    window.location.href = `mailto:?subject=Reporte de Lotes Recopilados&body=${encodeURIComponent(s)}`;
+});
+</script>
 </body>
 </html>
