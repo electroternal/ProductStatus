@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Colector de Datos de Lote</title>
+<title>Data Collection</title>
 
 <!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -79,26 +79,26 @@ tbody tr:hover { background:#f0f8ff; }
 
 <div class="container">
     <div class="card">
-        <h1>Colector de Datos de Lote</h1>
-        <button id="start-scan-btn" class="btn btn-primary">Escanear Nuevo Lote</button>
+        <h1>Data Collection</h1>
+        <button id="start-scan-btn" class="btn btn-primary">Scan New Lot</button>
     </div>
 
     <!-- Scan Section -->
     <div id="scanner-section" class="card">
         <div id="qr-reader"></div>
-        <button id="cancel-scan-btn" class="btn btn-secondary">Cancelar</button>
+        <button id="cancel-scan-btn" class="btn btn-secondary">Cancel</button>
     </div>
 
     <!-- Current Lot Section -->
     <div id="current-lot-section" class="card">
-        <h2>Datos del Lote Escaneado</h2>
+        <h2>Lot Data</h2>
         <pre id="json-output"></pre>
-        <button id="add-to-table-btn" class="btn btn-success">Confirmar y Añadir a la Lista</button>
+        <button id="add-to-table-btn" class="btn btn-success">Confirm and add to the list</button>
     </div>
 
     <!-- Collected Data Section -->
     <div id="collected-data-section" class="card">
-        <h2>Lotes Recopilados</h2>
+        <h2>Scanned Lots</h2>
         <div class="table-wrapper">
             <table id="data-table">
                 <thead><tr></tr></thead>
@@ -106,8 +106,8 @@ tbody tr:hover { background:#f0f8ff; }
             </table>
         </div>
         <div style="margin-top:15px;">
-            <button id="download-csv-btn" class="btn btn-success">Descargar como CSV</button>
-            <button id="email-csv-btn" class="btn btn-warning">Enviar por Email</button>
+            <button id="download-csv-btn" class="btn btn-success">Download as CSV</button>
+            <button id="email-csv-btn" class="btn btn-warning">Send via Email</button>
         </div>
     </div>
 </div>
@@ -260,3 +260,4 @@ emailCsvBtn.addEventListener('click', () => {
 </script>
 </body>
 </html>
+
