@@ -319,6 +319,54 @@ h1 {
         font-size: 1.5rem;
     }
 }
+
+/* Additional styles for server app */
+.container { max-width:800px; margin:30px auto; padding:20px; }
+
+.card { background:var(--card-bg); padding:20px; border-radius:8px; box-shadow:var(--shadow); margin-bottom:20px; }
+.card h2 { margin-bottom:15px; font-size:1.4rem; }
+
+#scanner-section, #current-lot-section, #collected-data-section { display:none; }
+#scanner-section.active, #current-lot-section.active, #collected-data-section.active { display:block; }
+
+#qr-reader { width:100%; }
+
+#json-output {
+    background:#272822; color:#f8f8f2;
+    padding:15px; border-radius:6px;
+    white-space:pre-wrap; word-wrap:break-word;
+    font-family:'Courier New',Courier,monospace;
+    max-height:300px; overflow:auto;
+}
+
+.table-wrapper { overflow-x:auto; }
+table {
+    width:100%; border-collapse:collapse;
+}
+th, td {
+    padding:10px 12px;
+    border:var(--border);
+    text-align:left;
+    white-space: nowrap;
+}
+thead th { background:#f2f2f2; }
+tbody tr:nth-child(even) { background:#fafafa; }
+tbody tr:hover { background:#f0f8ff; }
+
+.btn-delete { background:var(--danger); color:#fff; border-radius:4px; padding:4px 8px; font-size:0.9rem; }
+
+#collected-data-section > div:last-child {
+    margin-top:15px;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+#collected-data-section .btn {
+    width: auto;
+    flex: 1;
+    min-width: 150px;
+}
 </style>
 </head>
 <body>
