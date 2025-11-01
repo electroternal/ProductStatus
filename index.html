@@ -408,7 +408,6 @@ tbody tr:hover { background:#f0f8ff; }
 
 <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <script>
 let currentLotData = null, collectedData = [], tableHeaders = [], qrScanner = null;
@@ -423,21 +422,6 @@ const startScanBtn = document.getElementById('start-scan-btn'),
       dataTableBody = document.querySelector('#data-table tbody'),
       downloadCsvBtn = document.getElementById('download-csv-btn'),
       emailCsvBtn = document.getElementById('email-csv-btn');
-
-const emailConfig = {
-    serviceId: 'REEMPLAZAR_SERVICE_ID',
-    templateId: 'REEMPLAZAR_TEMPLATE_ID',
-    publicKey: 'REEMPLAZAR_PUBLIC_KEY',
-    toEmail: 'destinatario@ejemplo.com'
-};
-
-function stringToBase64(str) {
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
-}
-
-if (window.emailjs && emailConfig.publicKey && emailConfig.publicKey !== 'REEMPLAZAR_PUBLIC_KEY') {
-    emailjs.init({ publicKey: emailConfig.publicKey });
-}
 
 // ---------- Scanning ----------
 startScanBtn.addEventListener('click', () => {
@@ -565,39 +549,7 @@ emailCsvBtn.addEventListener('click', () => {
         alert("No hay datos.");
         return;
     }
-    if (!window.emailjs) {
-        alert('No se pudo cargar el servicio de email (EmailJS).');
-        return;
-    }
-    if ([emailConfig.serviceId, emailConfig.templateId, emailConfig.publicKey, emailConfig.toEmail].some(v => !v || v.includes('REEMPLAZAR_'))) {
-        alert('Actualice la configuración de EmailJS antes de enviar el correo.');
-        return;
-    }
-
-    const fileName = `datos_lotes_${new Date().toISOString().split('T')[0]}.csv`;
-    const dataUri = `data:text/csv;base64,${stringToBase64(s)}`;
-    const originalText = emailCsvBtn.textContent;
-    emailCsvBtn.disabled = true;
-    emailCsvBtn.textContent = 'Enviando...';
-
-    emailjs.send(emailConfig.serviceId, emailConfig.templateId, {
-        to_email: emailConfig.toEmail,
-        message: 'Se adjunta el archivo CSV con los lotes escaneados.',
-        attachments: [
-            {
-                name: fileName,
-                data: dataUri
-            }
-        ]
-    }).then(() => {
-        alert('Correo enviado correctamente.');
-    }).catch(err => {
-        console.error('Error enviando el correo:', err);
-        alert('No se pudo enviar el correo. Revise la consola para más detalles.');
-    }).finally(() => {
-        emailCsvBtn.disabled = false;
-        emailCsvBtn.textContent = originalText;
-    });
+    window.location.href = `mailto:?body=${encodeURIComponent(s)}`;
 });
 </script>
 </body>
