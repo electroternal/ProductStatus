@@ -474,7 +474,9 @@ function onScanSuccess(decodedText) {
         const jsonString = pako.inflate(bytes, { to: 'string' });
 
         currentLotData = JSON.parse(jsonString);
-        jsonOutput.textContent = JSON.stringify(currentLotData, null, 2);
+        jsonOutput.textContent = Object.entries(currentLotData)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
         currentLotSection.classList.add('active');
     } catch (e) {
         console.error("Error al procesar el QR:", e);
@@ -530,7 +532,10 @@ function generateCsvString() {
     const csvRows = [tableHeaders.join(',')];
     for (const row of collectedData) {
         const values = tableHeaders.map(header =>
-            `"${('' + (row[header] ?? '')).replace(/"/g, '""')}"`
+            (row[header] ?? '')
+                .toString()
+                .replace(/[\r\n]+/g, ' ')
+                .replace(/,/g, ' ')
         );
         csvRows.push(values.join(','));
     }
