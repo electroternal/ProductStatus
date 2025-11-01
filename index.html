@@ -423,6 +423,14 @@ const startScanBtn = document.getElementById('start-scan-btn'),
       downloadCsvBtn = document.getElementById('download-csv-btn'),
       emailCsvBtn = document.getElementById('email-csv-btn');
 
+function getCurrentDateLabel() {
+    return new Date().toLocaleDateString('es-ES');
+}
+
+function getCurrentDateSlug() {
+    return getCurrentDateLabel().replace(/[\/:]+/g, '-');
+}
+
 // ---------- Scanning ----------
 startScanBtn.addEventListener('click', () => {
     startScanBtn.classList.add('hidden');
@@ -539,7 +547,7 @@ downloadCsvBtn.addEventListener('click', () => {
     const u = URL.createObjectURL(b);
     const a = document.createElement('a');
     a.href = u;
-    a.download = 'datos_lotes.csv';
+    a.download = `Product status ${getCurrentDateSlug()}.csv`;
     a.click();
 });
 
@@ -549,7 +557,8 @@ emailCsvBtn.addEventListener('click', () => {
         alert("No hay datos.");
         return;
     }
-    window.location.href = `mailto:?body=${encodeURIComponent(s)}`;
+    const subject = `Product Status ${getCurrentDateLabel()}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(s)}`;
 });
 </script>
 </body>
